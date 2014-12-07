@@ -47,9 +47,5 @@ if (p!=(it->second).end()){
 }
 }
 }
-if (true)
-while(true)
-for (int i=1; i<algo; ++i)
-cout << "hola holita";
 return input;
 }
