@@ -1,7 +1,7 @@
 %{
 #include <iostream>
+#include <fstream>
 #include <stack>
-#include <vector>
 using namespace std;
 
 // Carácter de tabulación
@@ -34,14 +34,17 @@ simple_elif             else" "if{ln_chars}
 simple_for              for{ln_chars}
 simple_wh               while{ln_chars}
 simple_block            {simple_else}|{simple_if}|{simple_for}|{simple_wh}
-codeln                  {fst_char}{ln_chars};
+codeln                  {fst_char}{ln_chars}
 if                      {simple_if}{openp}{ln_chars}
 else                    {simple_else}{openp}{ln_chars}
 elif                    {simple_elif}{openp}{ln_chars}
-block_start             {fst_char}{ln_chars}{openp}{ln_chars}
+block_start             {fst_char}{ln_chars}[[:space:]]*{openp}{ln_chars}
 block_end               {closep}{ln_chars};?
+block_end_ln            {codeln}{closep}{ln_chars};?
 block_ln                {fst_char}{ln_chars}{openp}{ln_chars}{closep}{ln_chars}
 preproc_ln              \#[^\n]*
+public                  public\:
+private                 private\:
 other_ln                ([[:graph:]][^\n]*)*
 %%
 
@@ -99,7 +102,16 @@ other_ln                ([[:graph:]][^\n]*)*
                           indentation_lv.push(backup_indentation.top());
                           backup_indentation.pop();
                         }
-{codeln}                |
+                        
+{block_end_ln}          { indent(yytext,indentation_lv.top()); 
+                          indentation_lv.pop();
+                          indentation_lv.pop();
+                          indentation_lv.push(backup_indentation.top());
+                          backup_indentation.pop();
+                        }
+{private}               |
+{public}                { indent(yytext, indentation_lv.top()-1); }
+{codeln};               |
 {preproc_ln}            |
 {other_ln}              { indent(yytext); }
 \n                      { cout << endl; }
@@ -125,17 +137,23 @@ int main (int argc, char *argv[]){
     one_line_block = false;
     
     if (argc == 2){     
-        yyin = fopen (argv[1], "rt");     
-    
+        yyin = fopen (argv[1], "rt");
+        // Creamos el fichero de salida. ¡Estará indentado!
+        // Redirigimos la salida estándar del programa al archivo creado
+        string file = argv[1];
+        file += "(1)";
+        const char* out = file.c_str();
+        freopen(out,"w",stdout);
+        
         if (yyin == NULL){       
-            printf ("El fichero %s no se puede abrir\n", argv[1]);       
-            exit (-1);     
+            cerr << "El fichero %s no se puede abrir\n", argv[1];       
+            return -1;   
         }
         yylex (); 
     }   
     else{
         cerr << "Uso del programa: " << argv[0] << " " << "Nombre de fichero" << endl;
-        exit(-1);
+        return -1;
     }
     
     return 0; 
