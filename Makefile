@@ -9,7 +9,7 @@ BIN = .
 SRC = $(wildcard *.lex)
 EXE = $(basename $(BIN)/$(SRC))
 
-CFLAGS = -Wall -Wl,--no-as-needed
+CFLAGS = -Wl,--no-as-needed
 CXXFLAGS = $(CFLAGS) -std=c++0x
 LDFLAGS = -ll -I/usr/include
 

@@ -85,58 +85,58 @@ continue;
 for (int j=i; j<size-1; ++j) {
 int b = numeros[j];
 if (b != 0)
-numeros[j] = numeros[size-2];
+    numeros[j] = numeros[size-2];
 else
-continue;
+    continue;
 
 // Y prueba sobre ellos todas las operaciones
 for (int op=0; op<NOP; ++op) {
-// Cogemos siempre c como el mayor de ambos
-int c=(a>b?a:b), d=(c==a?b:a);
+    // Cogemos siempre c como el mayor de ambos
+    int c=(a>b?a:b), d=(c==a?b:a);
 
-// Comprueba que la operación sea válida
-bool indivisible = ((c%d != 0) and op==DIV);
-if (indivisible)
-continue;
+    // Comprueba que la operación sea válida
+    bool indivisible = ((c%d != 0) and op==DIV);
+    if (indivisible)
+        continue;
 
-// Comprueba que la operación sea útil
-int resultado = calcula[op](c,d);
-bool trivial = (resultado == a or resultado == b);
-bool zero = (resultado == 0);
-bool overflow = (resultado < 0);
-if (trivial or overflow or zero)
-continue;
+    // Comprueba que la operación sea útil
+    int resultado = calcula[op](c,d);
+    bool trivial = (resultado == a or resultado == b);
+    bool zero = (resultado == 0);
+    bool overflow = (resultado < 0);
+    if (trivial or overflow or zero)
+        continue;
 
-// Calcula y guarda la operación.
-#ifndef GRUPOS		
-opActual = {c, d, SIMBOLOS[op], resultado};
-operaciones.push_back(opActual);
+    // Calcula y guarda la operación.
+    #ifndef GRUPOS		
+    opActual = {c, d, SIMBOLOS[op], resultado};
+    operaciones.push_back(opActual);
 
-// Intenta resolver o mejorar con el nuevo número, sin pasarse
-if (abs(meta-resultado) < abs(meta-mejor)) {
-mejor = resultado;
-mejor_operaciones = operaciones;
+    // Intenta resolver o mejorar con el nuevo número, sin pasarse
+    if (abs(meta-resultado) < abs(meta-mejor)) {
+        mejor = resultado;
+        mejor_operaciones = operaciones;
 
-if (resultado == meta)
-return true;
-}
-#endif
+        if (resultado == meta)
+            return true;
+    }
+    #endif
 
-// Marca el nuevo resultado y comprueba si están todos marcados
-#ifdef GRUPOS
-if (marcar(resultado))
-return true;
-#endif
+    // Marca el nuevo resultado y comprueba si están todos marcados
+    #ifdef GRUPOS
+    if (marcar(resultado))
+        return true;
+    #endif
+    
+    // Guarda el nuevo resultado y sigue buscando
+    numeros[size-2] = resultado;
+    if (resuelve_rec(meta,size-1))
+        return true;
 
-// Guarda el nuevo resultado y sigue buscando
-numeros[size-2] = resultado;
-if (resuelve_rec(meta,size-1))
-return true;
-
-#ifndef GRUPOS
-//Saca las operaciones
-operaciones.pop_back();
-#endif
+    #ifndef GRUPOS
+    //Saca las operaciones
+    operaciones.pop_back();
+    #endif
 }
 numeros[size-2]=numeros[j];
 numeros[j]=b;
@@ -196,7 +196,7 @@ if (pos_escribir >= 0){
 buscaOperandos (mejor_operaciones[size-1],pos_escribir);
 
 mejor_operaciones.erase(mejor_operaciones.begin(),
-mejor_operaciones.begin() + pos_escribir + 1);   
+                    mejor_operaciones.begin() + pos_escribir + 1);   
 }
 }
 
@@ -211,9 +211,9 @@ if ((mejor_operaciones[j].resultado == un_operando) ||
 (mejor_operaciones[j].resultado == otro_operando)){
 
 if (uno_encontrado)
-otro_encontrado=true;
+    otro_encontrado=true;
 else
-uno_encontrado=true;
+    uno_encontrado=true;
 
 Cuenta aux(mejor_operaciones[j]);
 mejor_operaciones[j]=mejor_operaciones[pos_escribir];
