@@ -1,7 +1,8 @@
 #include <iostream>
 
 void funcion(){
-    if(algo){
+    if(algo)
+    { 
         int hola;
         if(hola)
             int prueba;
@@ -19,7 +20,12 @@ void funcion(){
                 }    
             }
             else if(condicion)
-                int otro;
+                if(condicion)
+                    if(condicion)
+                        if(condicion)
+                            if(condicion)
+                                int esto;
+                            else{
+                                int otro;}
 
-        }
-}
+    }}

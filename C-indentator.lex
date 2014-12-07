@@ -22,11 +22,16 @@ Función de indentación
     Indenta la línea 'text' a 'nindent' sangrías
 */
 void indent(string text,int nindent= indentation_lv.top());
+
+/*
+Permite buscar la primera ocurrencia de 'c' en text
+*/
+int look_for(string text, char c);
 %}
 
 openp                   \{
 closep                  \}
-fst_char                [^[:space:]]
+fst_char                [^[:space:]{}]
 ln_chars                [^\n{}]*
 simple_if               if{ln_chars}
 simple_else             else{ln_chars}
@@ -38,7 +43,8 @@ codeln                  {fst_char}{ln_chars}
 if                      {simple_if}{openp}{ln_chars}
 else                    {simple_else}{openp}{ln_chars}
 elif                    {simple_elif}{openp}{ln_chars}
-block_start             {fst_char}{ln_chars}[[:space:]]*{openp}{ln_chars}
+block_start             {fst_char}{ln_chars}{openp}{ln_chars}
+block_start_ml          {fst_char}{ln_chars}[\n]+{openp}{ln_chars}
 block_end               {closep}{ln_chars};?
 block_end_ln            {codeln}{closep}{ln_chars};?
 block_ln                {fst_char}{ln_chars}{openp}{ln_chars}{closep}{ln_chars}
@@ -78,20 +84,27 @@ other_ln                ([[:graph:]][^\n]*)*
                           if_indentation.pop();
                           one_line_block = true; }
                           
-{if}                    { backup_indentation.push(indentation_lv.top());
-                          if_indentation.push(indentation_lv.top());
+{if}                    { if_indentation.push(indentation_lv.top());
                           indent(yytext); 
+                          backup_indentation.push(indentation_lv.top());
                           indentation_lv.push(if_indentation.top() + 1); }
                           
-{elif}                  { backup_indentation.push(indentation_lv.top());
-                          indent(yytext,if_indentation.top());
+{elif}                  { indent(yytext,if_indentation.top());
+                          backup_indentation.push(indentation_lv.top());
                           indentation_lv.push(if_indentation.top() + 1); }
                           
-{else}                  { backup_indentation.push(indentation_lv.top());
-                          indentation_lv.push(if_indentation.top() + 1); 
-                          indent(yytext,if_indentation.top()); 
+{else}                  { indent(yytext,if_indentation.top()); 
+                          backup_indentation.push(indentation_lv.top());
+                          indentation_lv.push(if_indentation.top() + 1);
                           if_indentation.pop(); }
-                          
+
+{block_start_ml}        { int i = look_for(yytext,'{');
+                          indent(string(yytext,0,i-1));
+                          indent(string(yytext,i-1,yyleng-i+1));
+                          backup_indentation.push(indentation_lv.top());
+                          indentation_lv.push(indentation_lv.top() + 1);
+                        }
+                            
 {block_start}           { indent(yytext); 
                           backup_indentation.push(indentation_lv.top());
                           indentation_lv.push(indentation_lv.top() + 1); }
@@ -112,8 +125,18 @@ other_ln                ([[:graph:]][^\n]*)*
 {private}               |
 {public}                { indent(yytext, indentation_lv.top()-1); }
 {codeln};               |
-{preproc_ln}            |
-{other_ln}              { indent(yytext); }
+{preproc_ln}            { indent(yytext); }
+{other_ln}              { int i = look_for(yytext,'{');
+                          int j = look_for(yytext,'}');
+                          
+                          /* Comprobamos si la cadena son varios } encadenados*/
+                          if (i<yyleng || j<yyleng){
+                              REJECT;
+                          }
+                          else{
+                              indent(yytext);
+                          }
+                        }
 \n                      { cout << endl; }
 .                       {}
 
@@ -131,7 +154,17 @@ void indent(string text,int nindent){
     cout << text;
 }
 
-
+int look_for(string text, char c){
+    bool encontrado = false;
+    int i;
+    
+    for(i=0; i<text.length() && !encontrado; ++i){
+        if(yytext[i] == c)
+            encontrado = true;
+    }
+    
+    return i;
+}
 int main (int argc, char *argv[]){   
     indentation_lv.push(0);
     one_line_block = false;
