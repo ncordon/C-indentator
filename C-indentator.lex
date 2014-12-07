@@ -33,8 +33,10 @@ else                    {simple_else}{openp}{ln_chars}
 elif                    {simple_elif}{openp}{ln_chars}
 block_start             {fst_char}{ln_chars}{openp}{ln_chars}
 block_end               {closep}{ln_chars};?
+vector_ln               {ln_chars}{openp}{ln_chars}{closep}{ln_chars}
 %%
 
+{vector_ln}             { indent(yytext); }
 {simple_wh}             { indent(yytext); 
                           indentation_lv.push(indentation_lv.top() + 1);
                           one_line_block = true; }
