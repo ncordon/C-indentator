@@ -11,15 +11,15 @@ int otro_algo;
 }
 else if(){
 int blablabla;
-        if (ocurre){
-blablabla;
+    if (ocurre){
+    blablabla;
 }
 else if (blablabla){
 }
-        else{
+else{
 }
 }
-        else{
+    else{
 do{
 }while(sagjhsagh)
 }
