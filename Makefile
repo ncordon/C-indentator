@@ -7,7 +7,8 @@ SHELL = /bin/bash
 
 BIN = .
 SRC = $(wildcard *.lex)
-EXE = $(basename $(BIN)/$(SRC))
+EXE = C-indentator
+OBJS = $(addsuffix .o, $(basename $(SRC)))
 
 CFLAGS = -Wl,--no-as-needed
 CXXFLAGS = $(CFLAGS) -std=c++0x
@@ -15,9 +16,9 @@ LDFLAGS = -ll -I/usr/include
 
 ###############################################################################
 
-default: $(EXE)
+default: clean $(EXE)
 
-$(BIN)/%: %.o help.o
+$(BIN)/$(EXE): $(OBJS)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c

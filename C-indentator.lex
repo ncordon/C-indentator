@@ -1,55 +1,10 @@
 %{
-#include <iostream>
-#include <fstream>
-#include <stack>
-using namespace std;
-
-// Carácter de tabulación
-string tab = "    ";
-
-// Clase wrapper de pila
-class Stack{
-private:
-    stack<int> pila;
-public:    
-    int top(){
-        if (!pila.empty())
-            return pila.top();
-        else
-            return 0;
-    }
-    void pop(){
-        if (!pila.empty())
-            pila.pop();
-    }
-    void push(int n){
-        pila.push(n);
-    }
-};
-// Pila con el nivel de indentación en cada momento
-Stack indentation_lv;
-// El tope de esta pila indica el nivel de indentación que se aplicó al último if, o else if
-Stack if_indentation;
-// Pila que lleva una copia de seguridad del nivel de indentación antes de indentar un bloque
-Stack backup_indentation;
-
-// Indica si se está indentando un bloque(if,else,for,...) de una única linea
-bool one_line_block;
-
-/* 
-Función de indentación
-    Indenta la línea 'text' a 'nindent' sangrías
-*/
-void indent(string text,int nindent= indentation_lv.top());
-
-/*
-Permite buscar la primera ocurrencia de 'c' en text
-*/
-int look_for(string text, char c);
+#include "defs.cpp"
 %}
 
 openp                   \{
 closep                  \}
+linebreak               \n
 fst_char                [^[:space:]{}]
 ln_chars                [^\n{}]*
 simple_if               if{ln_chars}
@@ -77,18 +32,15 @@ other_ln                ([[:graph:]][^\n]*)*
 {simple_for};           |
 {simple_wh};            { indent(yytext); }
 {simple_for}            |
-{simple_wh}             { indent(yytext); 
-                          indentation_lv.push(indentation_lv.top() + 1);
+{simple_wh}             { int copia = indentation_lv.top();
+                          indent(yytext); 
+                          indentation_lv.push(copia + 1);
                           one_line_block = true; }
                           
 {simple_if};            { if_indentation.push(indentation_lv.top());
                           indent(yytext); }
                           
-{simple_if}             { if_indentation.push(indentation_lv.top());
-                          indent(yytext); 
-                          indentation_lv.push(if_indentation.top() + 1);
-                          one_line_block = true; }
-                          
+
 {simple_elif};          { indent(yytext,if_indentation.top()); }
 
 {simple_elif}           { indent(yytext,if_indentation.top());
@@ -124,14 +76,16 @@ other_ln                ([[:graph:]][^\n]*)*
                           indentation_lv.push(indentation_lv.top() + 1);
                         }
                             
-{block_start}           { indent(yytext); 
-                          backup_indentation.push(indentation_lv.top());
-                          indentation_lv.push(indentation_lv.top() + 1); }
+{block_start}           { int copia = indentation_lv.top();
+                          indent(yytext); 
+                          backup_indentation.push(copia);
+                          indentation_lv.push(copia + 1); }
                           
 {block_end}             { indent(yytext,indentation_lv.top()-1); 
                           indentation_lv.pop();
                           indentation_lv.pop();
                           indentation_lv.push(backup_indentation.top());
+                          if_indentation.adjust_ifs(backup_indentation.top() + 1);
                           backup_indentation.pop();
                         }
                         
@@ -139,6 +93,7 @@ other_ln                ([[:graph:]][^\n]*)*
                           indentation_lv.pop();
                           indentation_lv.pop();
                           indentation_lv.push(backup_indentation.top());
+                          if_indentation.adjust_ifs(backup_indentation.top() + 1);
                           backup_indentation.pop();
                         }
 {private}               |
@@ -161,29 +116,6 @@ other_ln                ([[:graph:]][^\n]*)*
 
 %%
 
-void indent(string text,int nindent){   
-    if (one_line_block){
-        one_line_block = false;
-        indentation_lv.pop();
-    }
-    
-    for(int i=0; i<nindent; ++i){
-        cout << tab;
-    }
-    cout << text;
-}
-
-int look_for(string text, char c){
-    bool encontrado = false;
-    int i;
-    
-    for(i=0; i<text.length() && !encontrado; ++i){
-        if(yytext[i] == c)
-            encontrado = true;
-    }
-    
-    return i;
-}
 int main (int argc, char *argv[]){   
     indentation_lv.push(0);
     one_line_block = false;
