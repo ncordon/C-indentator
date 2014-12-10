@@ -7,12 +7,31 @@ using namespace std;
 // Carácter de tabulación
 string tab = "    ";
 
+// Clase wrapper de pila
+class Stack{
+private:
+    stack<int> pila;
+public:    
+    int top(){
+        if (!pila.empty())
+            return pila.top();
+        else
+            return 0;
+    }
+    void pop(){
+        if (!pila.empty())
+            pila.pop();
+    }
+    void push(int n){
+        pila.push(n);
+    }
+};
 // Pila con el nivel de indentación en cada momento
-stack<int> indentation_lv;
+Stack indentation_lv;
 // El tope de esta pila indica el nivel de indentación que se aplicó al último if, o else if
-stack<int> if_indentation;
+Stack if_indentation;
 // Pila que lleva una copia de seguridad del nivel de indentación antes de indentar un bloque
-stack<int> backup_indentation;
+Stack backup_indentation;
 
 // Indica si se está indentando un bloque(if,else,for,...) de una única linea
 bool one_line_block;
