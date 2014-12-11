@@ -4,9 +4,9 @@
 
 openp                   \{
 closep                  \}
-linebreak               \n
 fst_char                [^[:space:]{}]
-ln_chars                [^\n{}]*
+ln_chars                [^{}\n]*
+comma                   ;{ln_chars}
 simple_if               if{ln_chars}
 simple_else             else{ln_chars}
 simple_elif             else" "if{ln_chars}
@@ -22,26 +22,32 @@ block_start_ml          {fst_char}{ln_chars}[\n]+{openp}{ln_chars}
 block_end               {closep}{ln_chars};?
 block_end_ln            {codeln}{closep}{ln_chars};?
 block_ln                {fst_char}{ln_chars}{openp}{ln_chars}{closep}{ln_chars}
-preproc_ln              \#[^\n]*
+preproc_ln              \#.*
 public                  public\:
 private                 private\:
 other_ln                ([[:graph:]][^\n]*)*
+
+%START SWITCH
 %%
 
 {block_ln}              |
-{simple_for};           |
-{simple_wh};            { indent(yytext); }
+{simple_for}{comma}     |
+{simple_wh}{comma}      { indent(yytext); }
 {simple_for}            |
 {simple_wh}             { int copia = indentation_lv.top();
                           indent(yytext); 
                           indentation_lv.push(copia + 1);
                           one_line_block = true; }
                           
-{simple_if};            { if_indentation.push(indentation_lv.top());
+{simple_if}{comma}      { if_indentation.push(indentation_lv.top());
                           indent(yytext); }
                           
-
-{simple_elif};          { indent(yytext,if_indentation.top()); }
+{simple_if}             { if_indentation.push(indentation_lv.top());
+                          indent(yytext); 
+                          indentation_lv.push(if_indentation.top() + 1);
+                          one_line_block = true;}
+                          
+{simple_elif}{comma}    { indent(yytext,if_indentation.top()); }
 
 {simple_elif}           { indent(yytext,if_indentation.top());
                           indentation_lv.push(if_indentation.top() + 1);
@@ -73,8 +79,7 @@ other_ln                ([[:graph:]][^\n]*)*
                           indent(string(yytext,0,i-1));
                           indent(string(yytext,i-1,yyleng-i+1));
                           backup_indentation.push(indentation_lv.top());
-                          indentation_lv.push(indentation_lv.top() + 1);
-                        }
+                          indentation_lv.push(indentation_lv.top() + 1);}
                             
 {block_start}           { int copia = indentation_lv.top();
                           indent(yytext); 
@@ -86,9 +91,8 @@ other_ln                ([[:graph:]][^\n]*)*
                           indentation_lv.pop();
                           indentation_lv.push(backup_indentation.top());
                           if_indentation.adjust_ifs(backup_indentation.top() + 1);
-                          backup_indentation.pop();
-                        }
-                        
+                          backup_indentation.pop(); }
+
 {block_end_ln}          { indent(yytext,indentation_lv.top()); 
                           indentation_lv.pop();
                           indentation_lv.pop();
@@ -97,8 +101,8 @@ other_ln                ([[:graph:]][^\n]*)*
                           backup_indentation.pop();
                         }
 {private}               |
-{public}                { indent(yytext, indentation_lv.top()-1); }
-{codeln};               |
+{public}                { indent(yytext,indentation_lv.top()-1); }
+{codeln}{comma}         |
 {preproc_ln}            { indent(yytext); }
 {other_ln}              { int i = look_for(yytext,'{');
                           int j = look_for(yytext,'}');
