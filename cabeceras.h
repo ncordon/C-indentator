@@ -9,6 +9,7 @@ using namespace std;
 
 
 // Clase wrapper de pila
+//      Devolverá indentación 0 si se solicita el tope y está vacía
 class Stack{
 protected:
     vector<int> pila;
@@ -37,9 +38,7 @@ Función de indentación
 */
 void indent(string text,int nindent= indentation_lv.top());
 
-/*
-Permite buscar la primera ocurrencia de 'c' en text
-*/
+//Permite buscar la primera ocurrencia de 'c' en text
 int look_for(string text, char c);
 
 // Indica si se está indentando un bloque(if,else,for,...) de una única linea

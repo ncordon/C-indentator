@@ -34,34 +34,56 @@ other_ln                ([[:graph:]][^\n]*)*
 {simple_for}{comma}     |
 {simple_wh}{comma}      { indent(yytext); }
 {simple_for}            |
-{simple_wh}             { int copia = indentation_lv.top();
+{simple_wh}             { /* while de una línea
+                                Se imprime el texto
+                                Se aumenta la sangría
+                                Se indica el inicio de un bloque de una línea
+                           */      
+
+                          int copia = indentation_lv.top();
                           indent(yytext); 
                           indentation_lv.push(copia + 1);
                           one_line_block = true; }
-                          
-{simple_if}{comma}      { if_indentation.push(indentation_lv.top());
+
+{simple_if}{comma}      { /* if de una línea, acabado en coma */
+                          if_indentation.push(indentation_lv.top());
                           indent(yytext); }
                           
-{simple_if}             { if_indentation.push(indentation_lv.top());
+{simple_if}             { /* if de una línea
+                                Se imprime el texto
+                                Se aumenta la sangría
+                                Se indica el inicio de un bloque de una línea
+                           */                               
+                          if_indentation.push(indentation_lv.top());
                           indent(yytext); 
                           indentation_lv.push(if_indentation.top() + 1);
                           one_line_block = true;}
                           
-{simple_elif}{comma}    { indent(yytext,if_indentation.top()); }
+{simple_elif}{comma}    { /* Else if de línea acabado en coma */
+                          indent(yytext,if_indentation.top()); }
 
-{simple_elif}           { indent(yytext,if_indentation.top());
+{simple_elif}           { /* Else if de una línea */
+                          indent(yytext,if_indentation.top());
                           indentation_lv.push(if_indentation.top() + 1);
                           one_line_block = true; }
                           
-{simple_else};          { indent(yytext,if_indentation.top()); 
+{simple_else}{comma}    { /* Else de línea, acabado en coma
+                                Se asocia con el último if a dicho nivel del que se tiene constancia
+                           */
+                          indent(yytext,if_indentation.top()); 
                           if_indentation.pop(); }
                           
-{simple_else}           { indentation_lv.push(if_indentation.top() + 1);
+{simple_else}           { /*Else de una sola línea */
+                          indentation_lv.push(if_indentation.top() + 1);
                           indent(yytext,if_indentation.top()); 
                           if_indentation.pop();
                           one_line_block = true; }
                           
-{if}                    { if_indentation.push(indentation_lv.top());
+{if}                    { /* Se imprime el if
+                             Se guarda la indentación del if
+                             Se aumenta la sangría
+                           */
+                          if_indentation.push(indentation_lv.top());
                           indent(yytext); 
                           backup_indentation.push(indentation_lv.top());
                           indentation_lv.push(if_indentation.top() + 1); }
@@ -75,7 +97,8 @@ other_ln                ([[:graph:]][^\n]*)*
                           indentation_lv.push(if_indentation.top() + 1);
                           if_indentation.pop(); }
 
-{block_start_ml}        { int i = look_for(yytext,'{');
+{block_start_ml}        { /* Se comprueba si el comienzo de bloque está partido en varias líneas */
+                          int i = look_for(yytext,'{');
                           indent(string(yytext,0,i-1));
                           indent(string(yytext,i-1,yyleng-i+1));
                           backup_indentation.push(indentation_lv.top());
@@ -93,7 +116,8 @@ other_ln                ([[:graph:]][^\n]*)*
                           if_indentation.adjust_ifs(backup_indentation.top() + 1);
                           backup_indentation.pop(); }
 
-{block_end_ln}          { indent(yytext,indentation_lv.top()); 
+{block_end_ln}          { /* El bloque termina en una línea de la forma *****}      */
+                          indent(yytext,indentation_lv.top()); 
                           indentation_lv.pop();
                           indentation_lv.pop();
                           indentation_lv.push(backup_indentation.top());
